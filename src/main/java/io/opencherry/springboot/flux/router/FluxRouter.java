@@ -9,9 +9,6 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * @author <a href="mailto:simling82@gmail.com">Simling</a>
  * @version v1.0 on 2018/9/28
@@ -29,25 +26,28 @@ public class FluxRouter extends BaseRouter {
             Mono<User> userMono = request.bodyToMono(User.class);
             userMono.subscribe(user -> logger.info("userMono: {}", user));
             // TODO service
-            Map<String, String> map = new HashMap<String, String>();
-            map.put("uid", "1");
+
             Mono<String> result = client.get()
                     .uri("/mobileweb/play/getUserRecords?uid={0}", 1).accept(MediaType.APPLICATION_JSON_UTF8)
                     .retrieve()
                     .bodyToMono(String.class);
-            Mono<User> newUser = null;
-            result.subscribe(s -> {
-                logger.info("s: {}", s);
+
+            Mono<User> newUser = result.map(s -> {
+                logger.info("newUser s: {}", s);
                 User user = new User();
                 user.setId(555l);
-                user.setUsername(s);
-                Mono<User> t = Mono.just(user);
-                t.and(result);
+                user.setPassword(s);
+                return user;
             });
+            result.subscribe(s -> logger.info("subscribe1: {}", s));
+            result.subscribe(s -> logger.info("subscribe2: {}", s));
 
             logger.info("end: {}");
 
-            return response(result);
+            Mono<User> s = Mono.just(new User());
+            s.subscribe(ss -> logger.info(""+ ss));
+
+            return response(newUser);
 //            return response(user);
 //            return response(t);
         });
