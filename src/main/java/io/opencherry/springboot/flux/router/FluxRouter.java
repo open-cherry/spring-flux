@@ -28,7 +28,8 @@ public class FluxRouter extends BaseRouter {
             // TODO service
 
             Mono<String> result = client.get()
-                    .uri("/mobileweb/play/getUserRecords?uid={0}", 1).accept(MediaType.APPLICATION_JSON_UTF8)
+                    .uri("/mobileweb/play/getUserRecords?uid={0}", 1)
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
                     .retrieve()
                     .bodyToMono(String.class);
 
