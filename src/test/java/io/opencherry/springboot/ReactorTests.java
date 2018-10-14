@@ -12,9 +12,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -135,12 +133,13 @@ public class ReactorTests {
         Flux<Long> userFlux = Flux.just(100l, 101l);
 
         Flux<User> combinations = userFlux.flatMap(id -> {
+            logger.info("in flatMap id: {}", id);
             Mono<User> mono = Mono.fromCallable(() -> getUserAsync(id))    // 1
                     .subscribeOn(Schedulers.elastic());  // 2
 
-            Mono<String> mono1 = Mono.fromCallable(() -> getPassword())    // 1
+            Mono<String> mono1 = Mono.fromCallable(() -> getPasswordAsync())    // 1
                     .subscribeOn(Schedulers.elastic());  // 2
-            logger.info("in flatMap!");
+
             return mono.zipWith(mono1, (u, p) -> {
                 logger.info("in zipWith!");
                 u.setPassword(p);
@@ -163,8 +162,8 @@ public class ReactorTests {
         return users.get(id);
     }
 
-    private String getPassword() {
-        logger.info("in getPassword!");
+    private String getPasswordAsync() {
+        logger.info("in getPasswordAsync!");
         try {
             TimeUnit.SECONDS.sleep(2);
         } catch (InterruptedException e) {

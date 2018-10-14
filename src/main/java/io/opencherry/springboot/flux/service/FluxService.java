@@ -11,7 +11,7 @@ public class FluxService {
 
     protected WebClient client = WebClient.create(URI.HOST);
 
-    public Mono<String> getYYInfo() {
+    public Mono<String> getYYInfo(Long id) {
         Mono<String> result = client.get()
                 .uri(URI.URI_YY, 1)
                 .accept(MediaType.APPLICATION_JSON_UTF8)

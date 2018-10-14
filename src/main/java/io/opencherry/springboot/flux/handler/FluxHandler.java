@@ -37,24 +37,30 @@ public class FluxHandler extends BaseHandler {
             // TODO Functional Programming Model
             logger.info("http uri: {}", request.uri());
 
-            request.bodyToMono(User.class).subscribe(user -> {
+            Mono<User> user1 = request.bodyToMono(User.class).map(user -> {
                 logger.info("userMono: {}", user);
-
+                Mono<String> result = fluxService.getYYInfo(user.getId());
+                Mono<User> newUser = result.map(s -> {
+                    logger.info("newUser s: {}", s);
+                    user.setPassword(s);
+                    return user;
+                });
+                return user;
+//                return newUser;
             });
-            Mono<String> result = fluxService.getYYInfo();
 
-            Mono<User> newUser = result.map(s -> {
-                logger.info("newUser s: {}", s);
-                User u = new User();
-                u.setId(555l);
-                u.setPassword(s);
-                return u;
-            });
-            result.subscribe(s -> logger.info("subscribe1: {}", s));
-            result.subscribe(s -> logger.info("subscribe2: {}", s));
-            logger.info("end: {}");
+//            Mono<User> newUser = result.map(s -> {
+//                logger.info("newUser s: {}", s);
+//                User u = new User();
+//                u.setId(555l);
+//                u.setPassword(s);
+//                return u;
+//            });
+//            result.subscribe(s -> logger.info("subscribe1: {}", s));
+//            result.subscribe(s -> logger.info("subscribe2: {}", s));
+//            logger.info("end: {}");
 
-            return response(newUser);
+            return response(user1);
         });
     }
 
