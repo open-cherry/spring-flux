@@ -41,7 +41,7 @@ public class FluxHandler extends BaseHandler {
                 logger.info("userMono: {}", user);
 
             });
-            Mono<String> result = result = fluxService.getYYInfo();
+            Mono<String> result = fluxService.getYYInfo();
 
             Mono<User> newUser = result.map(s -> {
                 logger.info("newUser s: {}", s);

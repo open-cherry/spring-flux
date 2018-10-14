@@ -8,8 +8,15 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 @RunWith(JUnit4.class)
@@ -17,9 +24,20 @@ public class ReactorTests {
 
     protected static Logger logger = LoggerFactory.getLogger(ReactorTests.class);
 
+    private  Map<Long, User> users = new HashMap<>();
+
     @Before
     public void before() {
         logger.info("before------------------");
+        User user = new User();
+        user.setId(100l);
+        user.setUsername("simon");
+        users.put(user.getId(), user);
+
+        user = new User();
+        user.setId(101l);
+        user.setUsername("simon1");
+        users.put(user.getId(), user);
     }
 
     @After
@@ -109,5 +127,69 @@ public class ReactorTests {
         logger.info("mono: {}", user);
     }
 
+    @Test
+    public void fluxAsyncTest() throws Exception {
+
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+
+        Flux<Long> userFlux = Flux.just(100l, 101l);
+
+        Flux<User> combinations = userFlux.flatMap(id -> {
+            Mono<User> mono = Mono.fromCallable(() -> getUserAsync(id))    // 1
+                    .subscribeOn(Schedulers.elastic());  // 2
+
+            Mono<String> mono1 = Mono.fromCallable(() -> getPassword())    // 1
+                    .subscribeOn(Schedulers.elastic());  // 2
+            logger.info("in flatMap!");
+            return mono.zipWith(mono1, (u, p) -> {
+                logger.info("in zipWith!");
+                u.setPassword(p);
+                return u;
+            });
+        });
+
+        combinations.subscribe(s -> logger.info("mono: {}", s ), null, countDownLatch::countDown);
+        countDownLatch.await(10, TimeUnit.SECONDS);
+    }
+
+    private User getUserAsync(Long id) {
+        logger.info("in getUserAsync!");
+        try {
+            TimeUnit.SECONDS.sleep(2);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        return users.get(id);
+    }
+
+    private String getPassword() {
+        logger.info("in getPassword!");
+        try {
+            TimeUnit.SECONDS.sleep(2);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        return "124555";
+    }
+
+    private String getStringSync() {
+        try {
+            TimeUnit.SECONDS.sleep(2);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return "Hello, Reactor!";
+    }
+
+    @Test
+    public void testSyncToAsync() throws InterruptedException {
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        Mono<String> mono = Mono.fromCallable(() -> getStringSync())    // 1
+                .subscribeOn(Schedulers.elastic());  // 2
+        mono.subscribe(s -> logger.info("mono: {}", s ), null, countDownLatch::countDown);
+        countDownLatch.await(10, TimeUnit.SECONDS);
+    }
 
 }

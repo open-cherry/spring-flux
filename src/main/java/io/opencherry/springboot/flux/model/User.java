@@ -3,7 +3,7 @@ package io.opencherry.springboot.flux.model;
 public class User {
 
   private Long id;
-  private Long age;
+  private Integer age;
   private String password;
   private String username;
 
@@ -15,11 +15,11 @@ public class User {
     this.id = id;
   }
 
-  public Long getAge() {
+  public Integer getAge() {
     return age;
   }
 
-  public void setAge(Long age) {
+  public void setAge(Integer age) {
     this.age = age;
   }
 
