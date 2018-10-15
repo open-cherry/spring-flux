@@ -34,33 +34,20 @@ public class FluxHandler extends BaseHandler {
     @Bean
     public RouterFunction<ServerResponse> collect() {
         return post(URI_COLLECT, request -> {
-            // TODO Functional Programming Model
+            // Functional Programming Model
             logger.info("http uri: {}", request.uri());
 
-            Mono<User> user1 = request.bodyToMono(User.class).map(user -> {
+            Mono<User> newUser = request.bodyToMono(User.class).flatMap(user -> { // 异步消费请求user
                 logger.info("userMono: {}", user);
-                Mono<String> result = fluxService.getYYInfo(user.getId());
-                Mono<User> newUser = result.map(s -> {
+                Mono<String> result = fluxService.getYYInfo(user.getId()); // 异步获取用户
+                return result.map(s -> { // 组装用户数据，返回
                     logger.info("newUser s: {}", s);
                     user.setPassword(s);
                     return user;
                 });
-                return user;
-//                return newUser;
             });
 
-//            Mono<User> newUser = result.map(s -> {
-//                logger.info("newUser s: {}", s);
-//                User u = new User();
-//                u.setId(555l);
-//                u.setPassword(s);
-//                return u;
-//            });
-//            result.subscribe(s -> logger.info("subscribe1: {}", s));
-//            result.subscribe(s -> logger.info("subscribe2: {}", s));
-//            logger.info("end: {}");
-
-            return response(user1);
+            return response(newUser);
         });
     }
 

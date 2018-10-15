@@ -91,38 +91,26 @@ public class ReactorTests {
     }
 
     @Test
-    public void monoAsync() throws Exception {
-        User user = new User();
-        user.setId(100l);
-        user.setUsername("simon");
+    public void monoAsyncTest() throws Exception {
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        Mono<Long> ids = Mono.just(100l);
+        Mono<User> monoUser = ids.flatMap(id -> {
+            logger.info("in flatMap id: {}", id);
+            Mono<User> mono = Mono.fromCallable(() -> getUserAsync(id))    // 1
+                    .subscribeOn(Schedulers.elastic());  // 2
 
+            Mono<String> mono1 = Mono.fromCallable(() -> getPasswordAsync())    // 1
+                    .subscribeOn(Schedulers.elastic());  // 2
 
-//        Mono<User> mono = Mono.just(user);
-//
-//        Mono.fromCallable(() -> "callable run ").subscribe(System.out::println);
-        Mono<User> mono = Mono.just(user);
-        mono.subscribe(i -> {
-            logger.info("mono subscribe: {}", i);
-        });
-        Thread t = new Thread(() -> {
-            mono.subscribe(i -> {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                i.setPassword("1234");
+            return mono.zipWith(mono1, (u, p) -> {
+                logger.info("in zipWith!");
+                u.setPassword(p);
+                return u;
             });
         });
 
-        t.setName("thread-0");
-        t.start();
-        logger.info("mono: {}", user);
-//        t.join();
-        mono.subscribe(i -> {
-            logger.info("mono subscribe1: {}", i);
-        });
-        logger.info("mono: {}", user);
+        monoUser.subscribe(s -> logger.info("mono: {}", s ), null, countDownLatch::countDown);
+        countDownLatch.await(10, TimeUnit.SECONDS);
     }
 
     @Test
@@ -131,7 +119,6 @@ public class ReactorTests {
         CountDownLatch countDownLatch = new CountDownLatch(1);
 
         Flux<Long> userFlux = Flux.just(100l, 101l);
-
         Flux<User> combinations = userFlux.flatMap(id -> {
             logger.info("in flatMap id: {}", id);
             Mono<User> mono = Mono.fromCallable(() -> getUserAsync(id))    // 1

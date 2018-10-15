@@ -15,11 +15,13 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
+import java.nio.charset.Charset;
+
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class SpringbootFluxApplicationTests {
 
-	protected static Logger logger = LoggerFactory.getLogger(ReactorTests.class);
+	protected static Logger logger = LoggerFactory.getLogger(SpringbootFluxApplicationTests.class);
 
 	@Autowired
 	private WebTestClient webTestClient;
@@ -40,6 +42,7 @@ public class SpringbootFluxApplicationTests {
 		User user = new User();
 		user.setId(100l);
 		user.setUsername("simon");
+
 		webTestClient.post().uri(URI.URI_COLLECT)
 				.contentType(MediaType.APPLICATION_JSON_UTF8)
 				.accept(MediaType.APPLICATION_JSON_UTF8)
@@ -49,7 +52,10 @@ public class SpringbootFluxApplicationTests {
 				.expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
 				.expectBody()
 				.jsonPath("$.password").isNotEmpty()
-				.jsonPath("$.password").isEqualTo("{\"code\":0,\"message\":\"success\",\"data\":[]}");
+				.jsonPath("$.password").isEqualTo("{\"code\":0,\"message\":\"success\",\"data\":[]}")
+				.consumeWith(c -> {
+					logger.info("result: {}", new String(c.getResponseBody(), Charset.forName("UTF-8")));
+				});
 	}
 
 
