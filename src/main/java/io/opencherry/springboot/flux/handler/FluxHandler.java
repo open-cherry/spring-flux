@@ -1,25 +1,16 @@
 package io.opencherry.springboot.flux.handler;
 
 import io.opencherry.springboot.flux.base.BaseHandler;
-import io.opencherry.springboot.flux.model.URI;
 import io.opencherry.springboot.flux.model.User;
 import io.opencherry.springboot.flux.service.FluxService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.MediaType;
-import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.RouterFunction;
-import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 import static io.opencherry.springboot.flux.model.URI.URI_COLLECT;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.web.reactive.function.BodyInserters.fromObject;
-import static org.springframework.web.reactive.function.server.ServerResponse.ok;
 
 /**
  * @author <a href="mailto:simling82@gmail.com">Simling</a>
@@ -33,7 +24,7 @@ public class FluxHandler extends BaseHandler {
 
     @Bean
     public RouterFunction<ServerResponse> collect() {
-        return post(URI_COLLECT, request -> {
+        RouterFunction<ServerResponse> function = post(URI_COLLECT, request -> {
             // Functional Programming Model
             logger.info("http uri: {}", request.uri());
 
@@ -49,6 +40,6 @@ public class FluxHandler extends BaseHandler {
 
             return response(newUser);
         });
+        return function;
     }
-
 }

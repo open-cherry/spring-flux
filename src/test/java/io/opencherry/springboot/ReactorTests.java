@@ -93,6 +93,19 @@ public class ReactorTests {
     @Test
     public void monoAsyncTest() throws Exception {
         CountDownLatch countDownLatch = new CountDownLatch(1);
+        for (int i = 0; i < 100; i++) {
+            _monoAsyncTest(countDownLatch);
+        }
+        logger.info("sleep.............. ");
+        Thread.sleep(2000);
+
+        for (int i = 0; i < 100; i++) {
+            _monoAsyncTest(countDownLatch);
+        }
+        countDownLatch.await(10, TimeUnit.SECONDS);
+    }
+
+    private void _monoAsyncTest(CountDownLatch countDownLatch) throws Exception {
         Mono<Long> ids = Mono.just(100l);
         Mono<User> monoUser = ids.flatMap(id -> {
             logger.info("in flatMap id: {}", id);
@@ -110,7 +123,7 @@ public class ReactorTests {
         });
 
         monoUser.subscribe(s -> logger.info("mono: {}", s ), null, countDownLatch::countDown);
-        countDownLatch.await(10, TimeUnit.SECONDS);
+
     }
 
     @Test
